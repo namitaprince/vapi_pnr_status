@@ -2,12 +2,26 @@ const pnrDatabase = require("../mock/pnrDatabase");
 
 
 const checkPNRStatus = (req, res) => {
-    console.log(" Incoming request from Vapi:");
-  console.log(JSON.stringify(req.body, null, 2)); // Nicely formatted
-    const toolCallList = req.body?.message?.toolCallList;
+    console.log("Incoming request from Vapi:");
+    console.log(JSON.stringify(req.body, null, 2));
   
-    if (!toolCallList || !Array.isArray(toolCallList)) {
-      return res.status(400).json({ error: "Invalid request format. toolCallList missing or not an array." });
+    let toolCallList = [];
+  
+    // Case 1: Postman / Vapi Tool Test (with 'message' wrapper)
+    if (req.body?.message?.toolCallList) {
+      toolCallList = req.body.message.toolCallList;
+    }
+  
+    // Case 2: Live Vapi AI Assistant conversation (direct 'toolCallList')
+    else if (req.body?.toolCallList) {
+      toolCallList = req.body.toolCallList.map((tool) => ({
+        id: tool.id,
+        arguments: tool.function?.arguments,
+      }));
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Invalid request format. toolCallList not found." });
     }
   
     const results = toolCallList.map((tool) => {
@@ -24,5 +38,7 @@ const checkPNRStatus = (req, res) => {
   
     return res.status(200).json({ results });
   };
+  
+  
   
   module.exports = { checkPNRStatus };
