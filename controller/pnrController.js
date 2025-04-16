@@ -1,6 +1,8 @@
 const pnrDatabase = require("../mock/pnrDatabase");
 
 const checkPNRStatus = (req, res) => {
+    console.log("🔥 Incoming request from Vapi:");
+  console.log(JSON.stringify(req.body, null, 2)); // Nicely formatted
     const toolCallList = req.body?.message?.toolCallList;
   
     if (!toolCallList || !Array.isArray(toolCallList)) {
