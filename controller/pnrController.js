@@ -29,21 +29,27 @@ const checkPNRStatus = (req, res) => {
       const record = pnrDatabase.find((entry) => entry.pnr === pnr);
       const status = record ? record.status : "PNR not found";
       const resultText = status;
-      
       console.log(tool.id);
       console.log(status);
+      
+      
+      
       
       
 
       
   
       return {
+        
         toolCallId: tool.id,
         result: resultText,
+        
       };
     });
-  
+    console.log(tool.id, result);
+    console.log(res);
     return res.status(200).json({ results });
+    
   };
   
   
