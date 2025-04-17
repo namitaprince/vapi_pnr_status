@@ -7,12 +7,12 @@ const checkPNRStatus = (req, res) => {
   
     let toolCallList = [];
   
-    // Case 1: Postman / Vapi Tool Test (with 'message' wrapper)
+    // Case 1: Postman / Vapi Tool Test
     if (req.body?.message?.toolCallList) {
       toolCallList = req.body.message.toolCallList;
     }
   
-    // Case 2: Live Vapi AI Assistant conversation (direct 'toolCallList')
+    // Case 2: Live Vapi AI Assistant conversation 
     else if (req.body?.toolCallList) {
       toolCallList = req.body.toolCallList.map((tool) => ({
         id: tool.id,
@@ -28,7 +28,7 @@ const checkPNRStatus = (req, res) => {
       const pnr = tool.arguments?.pnr;
       const record = pnrDatabase.find((entry) => entry.pnr === pnr);
       const status = record ? record.status : "PNR not found";
-      const resultText = `The booking status for PNR ${pnr} is ${status}.`;
+      const resultText = status;
   
       return {
         toolCallId: tool.id,
