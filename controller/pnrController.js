@@ -46,8 +46,7 @@ const checkPNRStatus = (req, res) => {
         
       };
     });
-    console.log(tool.id, result);
-    console.log(res);
+  
     return res.status(200).json({ results });
     
   };
