@@ -15,22 +15,7 @@ const checkPNRStatus = (req, res) => {
   // Case 2: Live Vapi AI Assistant conversation  
   else if (req.body?.toolCallList) {
     console.log("Processing request from Live Vapi AI Assistant");
-    
-    // Log the raw toolCallList before processing
-    console.log("Raw toolCallList:", JSON.stringify(req.body.toolCallList, null, 2));
-    
-    toolCallList = req.body.toolCallList.map((tool) => {
-      console.log(`Processing tool call with id: ${tool.id}`);
-      
-      // Check if arguments exists directly or in function property
-      const args = tool.arguments || (tool.function && tool.function.arguments);
-      console.log(`Arguments for tool ${tool.id}:`, JSON.stringify(args, null, 2));
-      
-      return {
-        id: tool.id,
-        arguments: args,
-      };
-    });
+    toolCallList = req.body.toolCallList;
   } else {
     console.log("Error: Invalid request format - toolCallList not found");
     return res
@@ -41,43 +26,52 @@ const checkPNRStatus = (req, res) => {
   console.log("Processed toolCallList:", JSON.stringify(toolCallList, null, 2));
   
   const results = toolCallList.map((tool) => {
-    console.log(`Looking up PNR for tool call ${tool.id}`);
+    console.log(`Processing tool call with id: ${tool.id}`);
     
-    // Check if arguments exist
-    if (!tool.arguments) {
-      console.log(`No arguments for tool call ${tool.id}`);
-      return {
-        toolCallId: tool.id,
-        result: "Error: Missing arguments",
-      };
+    // Extract PNR from the correct location in the structure
+    let pnr;
+    
+    // If the PNR is in tool.function.arguments (as in the Vapi request)
+    if (tool.function && tool.function.arguments) {
+      if (typeof tool.function.arguments === 'string') {
+        try {
+          // Try to parse it if it's a string
+          const args = JSON.parse(tool.function.arguments);
+          pnr = args.pnr;
+        } catch (e) {
+          // If it's a string but not JSON, use it directly
+          pnr = tool.function.arguments;
+        }
+      } else {
+        // If it's already an object
+        pnr = tool.function.arguments.pnr;
+      }
+    } 
+    // If the PNR is directly in tool.arguments (as in your original mapping)
+    else if (tool.arguments && tool.arguments.pnr) {
+      pnr = tool.arguments.pnr;
     }
     
-    // Get PNR from arguments
-    const pnr = tool.arguments.pnr;
-    console.log(`PNR received: ${pnr}`);
+    console.log(`PNR extracted: ${pnr}`);
     
     if (!pnr) {
-      console.log(`Invalid or missing PNR for tool call ${tool.id}`);
+      console.log(`No PNR found for tool call ${tool.id}`);
       return {
         toolCallId: tool.id,
-        result: "PNR not found",
+        result: "PNR not found"
       };
     }
     
-    // Log database content for debugging
-    console.log("Database entries:");
-    pnrDatabase.forEach(entry => console.log(`- PNR: ${entry.pnr}, Status: ${entry.status}`));
-    
-    // Look up record
+    // Look up the PNR in the database
     const record = pnrDatabase.find((entry) => entry.pnr === pnr);
-    console.log(`Record found for PNR ${pnr}:`, record);
+    console.log(`Database record found:`, record);
     
     const status = record ? record.status : "PNR not found";
     console.log(`Final status for PNR ${pnr}: ${status}`);
     
     return {
       toolCallId: tool.id,
-      result: status,
+      result: status
     };
   });
   
